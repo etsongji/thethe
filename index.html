@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영어 구문 & 문법 마스터 (Full Sentence Version)</title>
+    <title>영어 문법 완전 정복 (실시간 피드백)</title>
     <style>
         :root {
             --primary: #4a90e2;
@@ -12,173 +12,114 @@
             --bg: #f0f2f5;
         }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .container { background: white; width: 100%; max-width: 850px; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .container { background: white; width: 100%; max-width: 800px; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; border-bottom: 3px solid var(--primary); padding-bottom: 15px; margin-bottom: 30px; }
         h2 { background: var(--primary); color: white; display: inline-block; padding: 5px 15px; border-radius: 5px; font-size: 1.1rem; margin-top: 40px; }
         
-        .quiz-item { margin-bottom: 30px; padding: 25px; border: 1px solid #e1e8ed; border-radius: 15px; background: #fff; }
+        .quiz-item { margin-bottom: 30px; padding: 25px; border: 1px solid #e1e8ed; border-radius: 15px; background: #fff; transition: 0.3s; }
+        .quiz-item.solved { border-color: var(--success); background-color: #f0fff4; }
         .translation { display: block; margin-bottom: 10px; color: #2c3e50; font-weight: 700; background: #fff9db; padding: 12px; border-radius: 8px; font-size: 1rem; }
         .sentence-context { color: #555; margin-bottom: 15px; font-size: 1.05rem; line-height: 1.6; }
-        .sentence-context u { color: var(--primary); font-weight: bold; text-underline-offset: 4px; }
-
-        /* Part 1: Word Sorting */
-        .word-pool { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border: 2px dashed #cbd5e0; border-radius: 10px; }
-        .word { background: white; border: 1px solid #cbd5e0; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 1rem; }
-        .word:hover { border-color: var(--primary); color: var(--primary); }
-        .word.used { opacity: 0.2; pointer-events: none; }
-        .answer-area { display: flex; flex-wrap: wrap; gap: 10px; min-height: 55px; padding: 10px; border-bottom: 3px solid var(--primary); margin-bottom: 15px; align-items: center; background: #fdfdfd; }
-        .ans-word { background: var(--primary); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; }
-
-        /* Part 2: Multiple Choice */
-        .choice-container { display: flex; gap: 15px; margin-top: 15px; }
-        .choice-btn { flex: 1; padding: 12px; border: 2px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.2s; }
-        .choice-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
-
-        .submit-btn { width: 100%; padding: 20px; background: #2c3e50; color: white; border: none; border-radius: 12px; font-size: 1.25rem; font-weight: bold; cursor: pointer; margin-top: 40px; }
         
-        /* Result Screen */
-        #result-screen { display: none; }
-        .score-box { text-align: center; margin-bottom: 30px; }
-        .score-text { font-size: 4rem; font-weight: 900; color: var(--primary); margin: 10px 0; }
-        .review-card { margin-bottom: 20px; padding: 20px; border-left: 6px solid var(--danger); background: #fff5f5; border-radius: 8px; }
-        .correct-answer { color: var(--success); font-weight: bold; display: block; margin-top: 8px; line-height: 1.5; }
+        /* 단어 배열 */
+        .word-pool { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border: 2px dashed #cbd5e0; border-radius: 10px; }
+        .word { background: white; border: 1px solid #cbd5e0; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .word.used { opacity: 0.2; pointer-events: none; }
+        .answer-area { display: flex; flex-wrap: wrap; gap: 10px; min-height: 55px; padding: 10px; border-bottom: 3px solid var(--primary); margin-bottom: 15px; background: #fdfdfd; }
+        .ans-word { background: var(--primary); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+
+        /* 선택형 */
+        .choice-container { display: flex; gap: 15px; margin-top: 15px; }
+        .choice-btn { flex: 1; padding: 12px; border: 2px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; }
+        .choice-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .choice-btn.correct-choice { background: var(--success); color: white; border-color: var(--success); }
+
+        .feedback-msg { margin-top: 15px; font-weight: bold; font-size: 0.95rem; display: none; }
+        .feedback-msg.correct { color: var(--success); display: block; }
+        .feedback-msg.wrong { color: var(--danger); display: block; }
+
+        .check-btn { margin-top: 15px; padding: 10px 20px; border-radius: 8px; border: none; background: #2c3e50; color: white; cursor: pointer; font-weight: bold; }
+        .check-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        #final-report-btn { width: 100%; padding: 20px; background: #2c3e50; color: white; border: none; border-radius: 12px; font-size: 1.25rem; font-weight: bold; cursor: pointer; margin-top: 40px; display: none; }
+        
+        #result-screen { display: none; text-align: center; }
+        .score-text { font-size: 4rem; font-weight: 900; color: var(--primary); margin: 20px 0; }
     </style>
 </head>
 <body>
 
 <div class="container" id="quiz-ui">
-    <h1>📝 Grammar & Syntax Mastery</h1>
+    <h1>📝 Grammar Step-by-Step</h1>
+    <p style="text-align: center; color: #666;">각 문제의 정답을 맞춰야 다음으로 넘어갈 수 있습니다!</p>
     
-    <h2>PART 1. [The + 비교급] 어순 배열</h2>
-    <div id="part1-list"></div>
+    <div id="quiz-container"></div>
 
-    <h2>PART 2. 주격 관계대명사의 수 일치</h2>
-    <div id="part2-list"></div>
-
-    <button class="submit-btn" onclick="processResult()">학습 종료 및 리포트 생성</button>
+    <button id="final-report-btn" onclick="showFinalReport()">모든 문제 완료! 리포트 보기</button>
 </div>
 
 <div class="container" id="result-screen">
-    <div class="score-box">
-        <h1>Grade Report</h1>
-        <div class="score-text" id="final-score">0 / 10</div>
-        <p id="score-comment"></p>
-    </div>
-    <div id="wrong-analysis"></div>
-    <div style="text-align:center; margin-top:30px;">
-        <p style="color:#888;">이 화면을 캡처하여 제출하세요!</p>
-        <button class="submit-btn" style="background:var(--success);" onclick="window.location.reload()">다시 시작하기</button>
-    </div>
+    <h1>🎉 Perfect Clear!</h1>
+    <div class="score-text">10 / 10</div>
+    <p>모든 문제를 완벽하게 이해하고 해결했습니다.</p>
+    <p style="color: #888; font-size: 0.9rem;">이 화면을 캡처하여 제출하세요.</p>
+    <button class="check-btn" style="width: 100%; padding: 15px;" onclick="window.location.reload()">다시 시작하기</button>
 </div>
 
 <script>
-const p1Data = [
-    { 
-        translation: "우리가 환경 문제를 더 잘 인식할수록, 자연을 보호하려고 더 노력하게 된다.", 
-        context: "<u>(이 부분을 배열하세요)</u> of environmental issues, the more we try to protect nature.",
-        words: ["the", "more", "aware", "we", "are"], 
-        correct: "the more aware we are", 
-        full: "<strong>The more aware we are</strong> of environmental issues, the more we try to protect nature." 
-    },
-    { 
-        translation: "당신이 더 건강할수록, 일상 활동을 위한 에너지를 더 많이 갖게 될 것이다.", 
-        context: "<u>(이 부분을 배열하세요)</u>, the more energy you will have for daily activities.",
-        words: ["the", "more", "healthy", "you", "are"], 
-        correct: "the more healthy you are", 
-        full: "<strong>The more healthy you are</strong>, the more energy you will have for daily activities." 
-    },
-    { 
-        translation: "학생들이 더 자신감이 있을수록, 더 자연스럽게 의사소통할 수 있다.", 
-        context: "<u>(이 부분을 배열하세요)</u>, the more naturally they can communicate.",
-        words: ["the", "more", "confident", "students", "are"], 
-        correct: "the more confident students are", 
-        full: "<strong>The more confident students are</strong>, the more naturally they can communicate." 
-    },
-    { 
-        translation: "사람들이 더 고립될수록, 실제 친구를 사귀는 것은 더 어려워진다.", 
-        context: "<u>(이 부분을 배열하세요)</u>, the harder it is for them to make real-life friends.",
-        words: ["the", "more", "isolated", "people", "are"], 
-        correct: "the more isolated people are", 
-        full: "<strong>The more isolated people are</strong>, the harder it is for them to make real-life friends." 
-    },
-    { 
-        translation: "당신의 생각이 더 창의적일수록, 더 독특한 해결책을 찾을 수 있다.", 
-        context: "<u>(이 부분을 배열하세요)</u>, the more unique solutions you can find.",
-        words: ["the", "more", "creative", "your", "ideas", "are"], 
-        correct: "the more creative your ideas are", 
-        full: "<strong>The more creative your ideas are</strong>, the more unique solutions you can find." 
-    }
+const allData = [
+    // PART 1
+    { type: 'arr', translation: "우리가 환경 문제를 더 잘 인식할수록, 자연을 보호하려고 더 노력하게 된다.", context: "<u>(배열)</u> of environmental issues, the more we try to protect nature.", words: ["the", "more", "aware", "we", "are"], correct: "the more aware we are" },
+    { type: 'arr', translation: "당신이 더 건강할수록, 일상 활동을 위한 에너지를 더 많이 갖게 될 것이다.", context: "<u>(배열)</u>, the more energy you will have for daily activities.", words: ["the", "more", "healthy", "you", "are"], correct: "the more healthy you are" },
+    { type: 'arr', translation: "학생들이 더 자신감이 있을수록, 더 자연스럽게 의사소통할 수 있다.", context: "<u>(배열)</u>, the more naturally they can communicate.", words: ["the", "more", "confident", "students", "are"], correct: "the more confident students are" },
+    { type: 'arr', translation: "사람들이 더 고립될수록, 실제 친구를 사귀는 것은 더 어려워진다.", context: "<u>(배열)</u>, the harder it is for them to make real-life friends.", words: ["the", "more", "isolated", "people", "are"], correct: "the more isolated people are" },
+    { type: 'arr', translation: "당신의 생각이 더 창의적일수록, 더 독특한 해결책을 찾을 수 있다.", context: "<u>(배열)</u>, the more unique solutions you can find.", words: ["the", "more", "creative", "your", "ideas", "are"], correct: "the more creative your ideas are" },
+    // PART 2
+    { type: 'choice', translation: "연구원들은 수천 년 전 사람들이 어떻게 살았는지 보여주는 고대 유물을 발견했다.", sentence: "Artifacts that [reveal / reveals] how people lived thousands of years ago.", choices: ["reveal", "reveals"], correct: "reveal" },
+    { type: 'choice', translation: "자선 행사에 참여하기를 원하는 사람은 누구든 이번 주 금요일까지 신청해야 한다.", sentence: "Anyone who [want / wants] to participate in the charity event...", choices: ["want", "wants"], correct: "wants" },
+    { type: 'choice', translation: "도서관에는 기말고사를 준비하고 있는 많은 학생들이 있다.", sentence: "Many students in the library who [is / are] preparing...", choices: ["is", "are"], correct: "are" },
+    { type: 'choice', translation: "유기농 토양 채소는 면역 체계를 강화하는 데 도움을 주는 비타민을 함유한다.", sentence: "Vitamins that [help / helps] boost the immune system.", choices: ["help", "helps"], correct: "help" },
+    { type: 'choice', translation: "그 앱은 모든 체력 수준에 맞는 운동들을 포함하는 운동 계획을 제공한다.", sentence: "A workout plan that [includes / include] exercises...", choices: ["includes", "include"], correct: "includes" }
 ];
 
-const p2Data = [
-    { 
-        translation: "연구원들은 수천 년 전 사람들이 어떻게 살았는지 보여주는 몇 가지 고대 유물들을 발견했다.", 
-        sentence: "The researchers found several ancient artifacts that [reveal / reveals] how people lived thousands of years ago.", 
-        choices: ["reveal", "reveals"], 
-        correct: "reveal",
-        full: "The researchers found several ancient artifacts that <strong>reveal</strong> how people lived thousands of years ago."
-    },
-    { 
-        translation: "자선 행사에 참여하기를 원하는 사람은 누구든 이번 주 금요일까지 신청해야 한다.", 
-        sentence: "Anyone who [want / wants] to participate in the charity event should sign up by this Friday.", 
-        choices: ["want", "wants"], 
-        correct: "wants",
-        full: "Anyone who <strong>wants</strong> to participate in the charity event should sign up by this Friday."
-    },
-    { 
-        translation: "도서관에는 기말고사를 준비하고 있는 많은 학생들이 있다.", 
-        sentence: "There are many students in the library who [is / are] preparing for their final examinations.", 
-        choices: ["is", "are"], 
-        correct: "are",
-        full: "There are many students in the library who <strong>are</strong> preparing for their final examinations."
-    },
-    { 
-        translation: "유기농 채소는 면역 체계를 강화하는 데 도움을 주는 비타민을 함유하고 있다.", 
-        sentence: "Vegetables grown in organic soil contain a variety of vitamins that [help / helps] boost the immune system.", 
-        choices: ["help", "helps"], 
-        correct: "help",
-        full: "Vegetables grown in organic soil contain a variety of vitamins that <strong>help</strong> boost the immune system."
-    },
-    { 
-        translation: "그 앱은 모든 체력 수준에 맞는 운동들을 포함하는 개인 맞춤형 운동 계획을 제공한다.", 
-        sentence: "The app provides a personalized workout plan that [includes / include] exercises for all fitness levels.", 
-        choices: ["includes", "include"], 
-        correct: "includes",
-        full: "The app provides a personalized workout plan that <strong>includes</strong> exercises for all fitness levels."
+let solvedCount = 0;
+const container = document.getElementById('quiz-container');
+
+allData.forEach((q, idx) => {
+    const item = document.createElement('div');
+    item.className = 'quiz-item';
+    item.id = `item-${idx}`;
+
+    let html = `<span class="translation">Q${idx+1}. ${q.translation}</span>`;
+    
+    if(q.type === 'arr') {
+        const shuffled = [...q.words].sort(() => Math.random() - 0.5);
+        html += `
+            <div class="sentence-context">${q.context}</div>
+            <div class="answer-area" id="ans-${idx}"></div>
+            <div class="word-pool" id="pool-${idx}">
+                ${shuffled.map(w => `<span class="word" onclick="pickWord(this, ${idx})">${w}</span>`).join('')}
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="sentence-context" style="background:#f1f3f5; padding:10px; border-radius:5px;">${q.sentence}</div>
+            <div class="choice-container" id="choice-${idx}">
+                ${q.choices.map(c => `<button class="choice-btn" onclick="selectChoice(this, ${idx})">${c}</button>`).join('')}
+            </div>
+        `;
     }
-];
 
-// 초기화
-const p1List = document.getElementById('part1-list');
-p1Data.forEach((q, idx) => {
-    const div = document.createElement('div');
-    div.className = 'quiz-item';
-    const shuffled = [...q.words].sort(() => Math.random() - 0.5);
-    div.innerHTML = `
-        <span class="translation">뜻: ${q.translation}</span>
-        <div class="sentence-context">${q.context}</div>
-        <div class="answer-area" id="ans-p1-${idx}"></div>
-        <div class="word-pool">${shuffled.map(w => `<span class="word" onclick="addWord(this, ${idx})">${w}</span>`).join('')}</div>
+    html += `
+        <div id="feedback-${idx}" class="feedback-msg"></div>
+        <button id="btn-${idx}" class="check-btn" onclick="checkStep(${idx})">답 확인하기</button>
     `;
-    p1List.appendChild(div);
+    item.innerHTML = html;
+    container.appendChild(item);
 });
 
-const p2List = document.getElementById('part2-list');
-p2Data.forEach((q, idx) => {
-    const div = document.createElement('div');
-    div.className = 'quiz-item';
-    div.innerHTML = `
-        <span class="translation">뜻: ${q.translation}</span>
-        <div class="sentence-context" style="background:#f1f3f5; padding:10px; border-radius:5px;">${q.sentence}</div>
-        <div class="choice-container" id="ans-p2-${idx}">
-            ${q.choices.map(c => `<button class="choice-btn" onclick="setChoice(this, ${idx})">${c}</button>`).join('')}
-        </div>
-    `;
-    p2List.appendChild(div);
-});
-
-function addWord(el, idx) {
-    const area = document.getElementById(`ans-p1-${idx}`);
+function pickWord(el, idx) {
+    const area = document.getElementById(`ans-${idx}`);
     const w = document.createElement('span');
     w.className = 'ans-word';
     w.innerText = el.innerText;
@@ -187,39 +128,40 @@ function addWord(el, idx) {
     el.classList.add('used');
 }
 
-function setChoice(btn, idx) {
+function selectChoice(btn, idx) {
     Array.from(btn.parentElement.children).forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
 }
 
-function processResult() {
-    let score = 0;
-    const report = document.getElementById('wrong-analysis');
-    report.innerHTML = "<h3>🔍 오답 정답 확인</h3>";
+function checkStep(idx) {
+    const q = allData[idx];
+    const feedback = document.getElementById(`feedback-${idx}`);
+    let isCorrect = false;
 
-    p1Data.forEach((q, idx) => {
-        const user = Array.from(document.getElementById(`ans-p1-${idx}`).children).map(c => c.innerText).join(' ').toLowerCase();
-        if(user === q.correct.toLowerCase()) score++;
-        else createCard(q.translation, user, q.full);
-    });
-
-    p2Data.forEach((q, idx) => {
-        const sel = document.querySelector(`#ans-p2-${idx} .selected`);
-        const user = sel ? sel.innerText : "(미선택)";
-        if(user === q.correct) score++;
-        else createCard(q.translation, user, q.full);
-    });
-
-    function createCard(title, user, full) {
-        const div = document.createElement('div');
-        div.className = 'review-card';
-        div.innerHTML = `<strong>[문제]</strong> ${title}<br>제출답안: <span style="color:var(--danger); text-decoration:line-through;">${user || "(빈칸)"}</span><br><span class="correct-answer">정답 문장: ${full}</span>`;
-        report.appendChild(div);
+    if(q.type === 'arr') {
+        const user = Array.from(document.getElementById(`ans-${idx}`).children).map(c => c.innerText.trim()).join(' ').toLowerCase();
+        isCorrect = (user === q.correct.toLowerCase());
+    } else {
+        const sel = document.querySelector(`#choice-${idx} .selected`);
+        isCorrect = (sel && sel.innerText.trim() === q.correct);
     }
 
+    if(isCorrect) {
+        feedback.innerText = "✨ 정답입니다! 완벽해요.";
+        feedback.className = "feedback-msg correct";
+        document.getElementById(`item-${idx}`).classList.add('solved');
+        document.getElementById(`btn-${idx}`).disabled = true;
+        solvedCount++;
+        if(solvedCount === 10) document.getElementById('final-report-btn').style.display = 'block';
+    } else {
+        feedback.innerText = "❌ 틀렸습니다. 다시 한번 생각해보세요!";
+        feedback.className = "feedback-msg wrong";
+    }
+}
+
+function showFinalReport() {
     document.getElementById('quiz-ui').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
-    document.getElementById('final-score').innerText = `${score} / 10`;
     window.scrollTo(0,0);
 }
 </script>
