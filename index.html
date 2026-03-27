@@ -3,177 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The + 비교급 어순 배열 연습</title>
+    <title>The + 비교급 완벽 마스터</title>
     <style>
         :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-            --error-color: #dc3545;
-            --bg-color: #f4f7f9;
+            --primary: #4a90e2;
+            --success: #28a745;
+            --danger: #dc3545;
+            --bg: #f8f9fa;
         }
-        body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            width: 100%;
-            max-width: 700px;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; font-size: 1.5rem; }
-        .description { background: #f0f4f8; padding: 15px; border-radius: 12px; margin-bottom: 30px; font-size: 0.9rem; line-height: 1.6; color: #555; border-left: 5px solid var(--primary-color); }
-        .quiz-item { margin-bottom: 45px; position: relative; }
-        .topic-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .topic-title { font-weight: 700; color: #333; font-size: 1.05rem; }
-        .translation { font-size: 0.9rem; color: #666; background: #fff9db; padding: 5px 10px; border-radius: 5px; display: inline-block; margin-bottom: 15px; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; width: 100%; max-width: 700px; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        .quiz-item { margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
+        .translation { background: #fff9db; padding: 8px; border-radius: 5px; font-size: 0.9em; margin-bottom: 10px; display: block; }
+        .word-pool { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; min-height: 40px; padding: 10px; background: #f1f3f5; border-radius: 8px; }
+        .word { background: white; border: 1px solid #dee2e6; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .word.used { opacity: 0.3; pointer-events: none; }
+        .answer-area { display: flex; flex-wrap: wrap; gap: 8px; min-height: 45px; padding: 10px; border-bottom: 2px solid var(--primary); margin-bottom: 10px; }
+        .ans-word { background: var(--primary); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        .submit-btn { width: 100%; padding: 15px; background: #333; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; margin-top: 20px; }
         
-        .word-pool { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; min-height: 45px; padding: 12px; background: #f9f9f9; border: 1px dashed #cbd5e0; border-radius: 10px; }
-        .word { background: white; border: 1px solid #e2e8f0; padding: 8px 14px; border-radius: 8px; cursor: pointer; user-select: none; transition: all 0.2s; font-size: 0.95rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .word:hover { border-color: var(--primary-color); transform: translateY(-2px); }
-        .word.used { opacity: 0.2; cursor: default; pointer-events: none; }
-        
-        .answer-area { display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; padding: 10px; background: #fff; border-bottom: 3px solid var(--primary-color); margin-bottom: 10px; align-items: center; }
-        .answer-word { background: var(--primary-color); color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; animation: popIn 0.2s ease-out; }
-        
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
-        .full-sentence-preview { font-style: italic; color: #94a3b8; font-size: 0.9rem; margin-top: 5px; }
-        .controls { display: flex; align-items: center; gap: 15px; margin-top: 20px; }
-        .btn-check { background: #2c3e50; color: white; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        .btn-check:hover { background: #1a252f; }
-        .result-msg { font-weight: 700; font-size: 0.95rem; }
-        .correct { color: var(--success-color); }
-        .wrong { color: var(--error-color); }
+        /* 결과 화면 스타일 */
+        #result-screen { display: none; padding: 20px; border: 2px solid #333; border-radius: 15px; background: white; margin-top: 20px; }
+        .score-badge { font-size: 2em; text-align: center; margin: 20px 0; color: var(--primary); font-weight: bold; }
+        .review-item { margin-bottom: 15px; padding: 10px; border-left: 4px solid var(--danger); background: #fff5f5; }
+        .correct-text { color: var(--success); font-weight: bold; }
+        .wrong-text { color: var(--danger); text-decoration: line-through; margin-right: 10px; }
+        .capture-guide { text-align: center; color: #888; font-size: 0.8em; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>The + 비교급 어순 배열 연습</h1>
-    <div class="description">
-        <strong>💡 규칙:</strong> [The + 비교급 + 형용사/부사] 덩어리를 먼저 완성한 뒤 [주어 + 동사]를 붙이세요. 단어를 클릭하여 아래 칸을 채울 수 있습니다.
-    </div>
+<div class="container" id="main-container">
+    <h1>The + 비교급 어순 배열</h1>
+    <div id="quiz-list"></div>
+    <button class="submit-btn" onclick="showTotalResult()">학습 종료 및 결과 보기</button>
 
-    <div id="quiz-container"></div>
+    <div id="result-screen">
+        <h2 style="text-align:center;">🎉 학습 결과 리포트</h2>
+        <div class="score-badge" id="final-score">0 / 0</div>
+        <div id="wrong-answers-list"></div>
+        <p class="capture-guide">💡 이 화면을 캡처하여 제출하세요!</p>
+        <button class="submit-btn" style="background:var(--success);" onclick="window.location.reload()">다시 풀기</button>
+    </div>
 </div>
 
 <script>
 const quizData = [
-    {
-        topic: "1. 환경 문제에 대한 인식",
-        translation: "우리가 환경 문제를 더 잘 인식할수록, 자연을 보호하려고 더 노력하게 된다.",
-        words: ["the", "more", "aware", "we", "are"],
-        answer: "the more aware we are",
-        rest: "of environmental issues, the more we try to protect nature."
-    },
-    {
-        topic: "2. 건강과 에너지의 관계",
-        translation: "당신이 더 건강할수록, 일상 활동을 위한 에너지를 더 많이 갖게 될 것이다.",
-        words: ["the", "more", "healthy", "you", "are"],
-        answer: "the more healthy you are",
-        rest: ", the more energy you will have for daily activities."
-    },
-    {
-        topic: "3. 언어 학습과 자신감",
-        translation: "학생들이 더 자신감이 있을수록, 더 자연스럽게 의사소통할 수 있다.",
-        words: ["the", "more", "confident", "students", "are"],
-        answer: "the more confident students are",
-        rest: ", the more naturally they can communicate."
-    },
-    {
-        topic: "4. 사회적 고립과 교우 관계",
-        translation: "사람들이 더 고립될수록, 실제 친구를 사귀는 것은 더 어려워진다.",
-        words: ["the", "more", "isolated", "people", "are"],
-        answer: "the more isolated people are",
-        rest: ", the harder it is for them to make real-life friends."
-    },
-    {
-        topic: "5. 창의적 사고와 해결책",
-        translation: "당신의 생각이 더 창의적일수록, 더 독특한 해결책을 찾을 수 있다.",
-        words: ["the", "more", "creative", "your", "ideas", "are"],
-        answer: "the more creative your ideas are",
-        rest: ", the more unique solutions you can find."
-    }
+    { topic: "1. 환경 문제 인식", translation: "우리가 환경 문제를 더 잘 인식할수록, 자연을 보호하려고 더 노력하게 된다.", words: ["the", "more", "aware", "we", "are"], answer: "the more aware we are" },
+    { topic: "2. 건강과 에너지", translation: "당신이 더 건강할수록, 일상 활동을 위한 에너지를 더 많이 갖게 될 것이다.", words: ["the", "more", "healthy", "you", "are"], answer: "the more healthy you are" },
+    { topic: "3. 자신감과 소통", translation: "학생들이 더 자신감이 있을수록, 더 자연스럽게 의사소통할 수 있다.", words: ["the", "more", "confident", "students", "are"], answer: "the more confident students are" },
+    { topic: "4. 고립과 교우관계", translation: "사람들이 더 고립될수록, 실제 친구를 사귀는 것은 더 어려워진다.", words: ["the", "more", "isolated", "people", "are"], answer: "the more isolated people are" },
+    { topic: "5. 창의성과 해결책", translation: "당신의 생각이 더 창의적일수록, 더 독특한 해결책을 찾을 수 있다.", words: ["the", "more", "creative", "your", "ideas", "are"], answer: "the more creative your ideas are" }
 ];
 
-function shuffle(array) {
-    return [...array].sort(() => Math.random() - 0.5);
-}
-
-const container = document.getElementById('quiz-container');
+const quizList = document.getElementById('quiz-list');
 
 quizData.forEach((q, idx) => {
-    const section = document.createElement('div');
-    section.className = 'quiz-item';
+    const div = document.createElement('div');
+    div.className = 'quiz-item';
+    const shuffled = [...q.words].sort(() => Math.random() - 0.5);
     
-    const shuffledWords = shuffle(q.words);
-    
-    section.innerHTML = `
-        <div class="topic-header">
-            <span class="topic-title">${q.topic}</span>
-        </div>
-        <div class="translation">뜻: ${q.translation}</div>
+    div.innerHTML = `
+        <strong style="display:block; margin-bottom:5px;">${q.topic}</strong>
+        <span class="translation">뜻: ${q.translation}</span>
         <div class="word-pool" id="pool-${idx}">
-            ${shuffledWords.map(w => `<span class="word" data-word="${w}" onclick="addWord(${idx}, this)">${w}</span>`).join('')}
+            ${shuffled.map(w => `<span class="word" onclick="pick(this, ${idx})">${w}</span>`).join('')}
         </div>
-        <div class="answer-area" id="answer-${idx}"></div>
-        <div class="full-sentence-preview">... ${q.rest}</div>
-        <div class="controls">
-            <button class="btn-check" onclick="checkAnswer(${idx})">정답 확인</button>
-            <span id="result-${idx}" class="result-msg"></span>
-        </div>
+        <div class="answer-area" id="ans-${idx}"></div>
     `;
-    container.appendChild(section);
+    quizList.appendChild(div);
 });
 
-function addWord(idx, el) {
-    const answerArea = document.getElementById(`answer-${idx}`);
-    const wordText = el.getAttribute('data-word');
-    
-    const newWord = document.createElement('span');
-    newWord.className = 'answer-word';
-    newWord.innerText = wordText;
-    
-    // 클릭 시 삭제 기능
-    newWord.onclick = () => {
-        newWord.remove();
-        el.classList.remove('used');
-        document.getElementById(`result-${idx}`).innerText = ""; // 결과 메시지 초기화
-    };
-    
-    answerArea.appendChild(newWord);
+function pick(el, idx) {
+    const ansArea = document.getElementById(`ans-${idx}`);
+    const word = document.createElement('span');
+    word.className = 'ans-word';
+    word.innerText = el.innerText;
+    word.onclick = () => { word.remove(); el.classList.remove('used'); };
+    ansArea.appendChild(word);
     el.classList.add('used');
 }
 
-function checkAnswer(idx) {
-    const answerArea = document.getElementById(`answer-${idx}`);
-    const resultSpan = document.getElementById(`result-${idx}`);
-    const userAns = Array.from(answerArea.children).map(c => c.innerText).join(' ').toLowerCase();
-    const correctAns = quizData[idx].answer.toLowerCase();
+function showTotalResult() {
+    let score = 0;
+    const wrongList = document.getElementById('wrong-answers-list');
+    wrongList.innerHTML = "<h3>📝 오답 노트</h3>";
     
-    if(userAns === "") {
-        resultSpan.innerText = "⚠️ 단어를 먼저 배열하세요.";
-        resultSpan.className = "result-msg wrong";
-        return;
+    quizData.forEach((q, idx) => {
+        const userAns = Array.from(document.getElementById(`ans-${idx}`).children).map(c => c.innerText).join(' ').toLowerCase();
+        if(userAns === q.answer.toLowerCase()) {
+            score++;
+        } else {
+            const item = document.createElement('div');
+            item.className = 'review-item';
+            item.innerHTML = `
+                <div style="font-weight:bold; margin-bottom:5px;">${q.topic}</div>
+                <div><span class="wrong-text">${userAns || "(빈칸)"}</span></div>
+                <div>정답: <span class="correct-text">${q.answer}</span></div>
+            `;
+            wrongList.appendChild(item);
+        }
+    });
+
+    if(score === quizData.length) {
+        wrongList.innerHTML += "<p style='text-align:center;'>모든 문제를 맞혔습니다! 완벽해요! 👏</p>";
     }
 
-    if(userAns === correctAns) {
-        resultSpan.innerText = "✅ 정답입니다! 아주 잘하셨어요.";
-        resultSpan.className = "result-msg correct";
-    } else {
-        resultSpan.innerText = "❌ 순서가 틀렸습니다. 다시 시도해보세요!";
-        resultSpan.className = "result-msg wrong";
-    }
+    document.getElementById('quiz-list').style.display = 'none';
+    document.querySelector('.submit-btn').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+    document.getElementById('final-score').innerText = `${score} / ${quizData.length}`;
+    
+    // 화면 상단으로 이동하여 캡처 준비
+    window.scrollTo(0, 0);
 }
 </script>
-
 </body>
 </html>
