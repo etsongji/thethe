@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영어 문법 완전 정복 (실시간 진행형)</title>
+    <title>영어 문법 학습 & 오답 노트</title>
     <style>
         :root {
             --primary: #4a90e2;
@@ -15,11 +15,7 @@
         .container { background: white; width: 100%; max-width: 800px; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; border-bottom: 3px solid var(--primary); padding-bottom: 15px; margin-bottom: 30px; }
         
-        /* 상단 고정 점수판 */
-        .status-bar { position: sticky; top: 0; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; z-index: 100; text-align: center; font-weight: bold; border: 2px solid var(--primary); }
-        
-        .quiz-item { margin-bottom: 30px; padding: 25px; border: 1px solid #e1e8ed; border-radius: 15px; background: #fff; transition: 0.3s; }
-        .quiz-item.solved { border-color: var(--success); background-color: #f0fff4; }
+        .quiz-item { margin-bottom: 30px; padding: 25px; border: 1px solid #e1e8ed; border-radius: 15px; background: #fff; }
         .translation { display: block; margin-bottom: 10px; color: #2c3e50; font-weight: 700; background: #fff9db; padding: 12px; border-radius: 8px; font-size: 1rem; }
         .sentence-context { color: #555; margin-bottom: 15px; font-size: 1.05rem; line-height: 1.6; }
         
@@ -35,153 +31,134 @@
         .choice-btn { flex: 1; padding: 12px; border: 2px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: 600; }
         .choice-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .feedback-msg { margin-top: 15px; font-weight: bold; display: none; }
-        .feedback-msg.correct { color: var(--success); display: block; }
-        .feedback-msg.wrong { color: var(--danger); display: block; }
-
-        .check-btn { margin-top: 15px; padding: 10px 25px; border-radius: 8px; border: none; background: #2c3e50; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .check-btn:disabled { background: #cbd5e0; cursor: default; }
-
-        /* 하단 제출 버튼 */
-        #final-report-btn { width: 100%; padding: 25px; background: #95a5a6; color: white; border: none; border-radius: 12px; font-size: 1.3rem; font-weight: bold; cursor: not-allowed; margin-top: 50px; transition: 0.3s; }
-        #final-report-btn.ready { background: var(--success); cursor: pointer; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); }
+        .submit-btn { width: 100%; padding: 25px; background: #2c3e50; color: white; border: none; border-radius: 12px; font-size: 1.3rem; font-weight: bold; cursor: pointer; margin-top: 50px; }
         
-        #result-screen { display: none; text-align: center; }
-        .score-text { font-size: 5rem; font-weight: 900; color: var(--primary); margin: 20px 0; }
+        /* 결과 화면 및 오답 노트 */
+        #result-screen { display: none; }
+        .score-box { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        .score-text { font-size: 4rem; font-weight: 900; color: var(--primary); }
+        .review-card { margin-bottom: 20px; padding: 20px; border-left: 6px solid var(--danger); background: #fff5f5; border-radius: 8px; text-align: left; }
+        .correct-answer { color: var(--success); font-weight: bold; display: block; margin-top: 8px; }
+        .wrong-input { color: var(--danger); text-decoration: line-through; margin-right: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container" id="quiz-ui">
-    <h1>📝 Grammar Step-by-Step</h1>
-    
-    <div class="status-bar" id="status-display">진행 상황: 0 / 10 문제 완료</div>
+    <h1>📝 Grammar Test & Review</h1>
+    <p style="text-align: center; color: #666;">문제를 풀고 아래 버튼을 눌러 오답 노트를 확인하세요.</p>
     
     <div id="quiz-container"></div>
 
-    <button id="final-report-btn" onclick="showFinalReport()" disabled>학습 미완료 (모든 정답을 맞춰주세요)</button>
+    <button class="submit-btn" onclick="processResult()">학습 종료 및 오답 노트 생성</button>
 </div>
 
 <div class="container" id="result-screen">
-    <h1>🎉 Mission Complete!</h1>
-    <div class="score-text">10 / 10</div>
-    <p style="font-size: 1.2rem;">모든 영작과 수 일치 문제를 정복했습니다.</p>
-    <p style="color: #888; margin-top: 20px;">이 화면을 캡처하여 인증샷으로 제출하세요.</p>
-    <button class="check-btn" style="width: 100%; padding: 20px; font-size: 1.1rem; margin-top: 30px;" onclick="window.location.reload()">다시 처음부터 풀기</button>
+    <div class="score-box">
+        <h1>Grade Report</h1>
+        <div class="score-text" id="final-score">0 / 10</div>
+        <p>오답 노트를 확인하고 부족한 부분을 복습하세요!</p>
+    </div>
+    
+    <div id="wrong-analysis"></div>
+
+    <div style="text-align:center; margin-top:30px; border-top: 1px dashed #ccc; padding-top: 20px;">
+        <p style="color: #888;">이 화면을 캡처하여 제출하세요.</p>
+        <button class="submit-btn" style="background:var(--success); margin-top:10px;" onclick="window.location.reload()">다시 시작하기</button>
+    </div>
 </div>
 
 <script>
 const allData = [
-    { type: 'arr', translation: "우리가 환경 문제를 더 잘 인식할수록, 자연을 보호하려고 더 노력하게 된다.", context: "<u>(배열하세요)</u> of environmental issues, the more we try to protect nature.", words: ["the", "more", "aware", "we", "are"], correct: "the more aware we are" },
-    { type: 'arr', translation: "당신이 더 건강할수록, 일상 활동을 위한 에너지를 더 많이 갖게 될 것이다.", context: "<u>(배열하세요)</u>, the more energy you will have for daily activities.", words: ["the", "more", "healthy", "you", "are"], correct: "the more healthy you are" },
-    { type: 'arr', translation: "학생들이 더 자신감이 있을수록, 더 자연스럽게 의사소통할 수 있다.", context: "<u>(배열하세요)</u>, the more naturally they can communicate.", words: ["the", "more", "confident", "students", "are"], correct: "the more confident students are" },
-    { type: 'arr', translation: "사람들이 더 고립될수록, 실제 친구를 사겨는 것은 더 어려워진다.", context: "<u>(배열하세요)</u>, the harder it is for them to make real-life friends.", words: ["the", "more", "isolated", "people", "are"], correct: "the more isolated people are" },
-    { type: 'arr', translation: "당신의 생각이 더 창의적일수록, 더 독특한 해결책을 찾을 수 있다.", context: "<u>(배열하세요)</u>, the more unique solutions you can find.", words: ["the", "more", "creative", "your", "ideas", "are"], correct: "the more creative your ideas are" },
-    { type: 'choice', translation: "연구원들은 수천 년 전 사람들이 어떻게 살았는지 보여주는 유물을 발견했다.", sentence: "Ancient artifacts that [reveal / reveals] how people lived thousands of years ago.", choices: ["reveal", "reveals"], correct: "reveal" },
-    { type: 'choice', translation: "자선 행사에 참여하기를 원하는 사람은 누구든 이번 주 금요일까지 신청해야 한다.", sentence: "Anyone who [want / wants] to participate in the charity event...", choices: ["want", "wants"], correct: "wants" },
-    { type: 'choice', translation: "도서관에는 기말고사를 준비하고 있는 많은 학생들이 있다.", sentence: "Many students in the library who [is / are] preparing...", choices: ["is", "are"], correct: "are" },
-    { type: 'choice', translation: "유기농 토양 채소는 면역 체계를 강화하는 데 도움을 주는 비타민을 함유한다.", sentence: "Vitamins that [help / helps] boost the immune system.", choices: ["help", "helps"], correct: "help" },
-    { type: 'choice', translation: "그 앱은 모든 체력 수준에 맞는 운동들을 포함하는 운동 계획을 제공한다.", sentence: "A workout plan that [includes / include] exercises...", choices: ["includes", "include"], correct: "includes" }
+    { id: 1, type: 'arr', translation: "우리가 환경 문제를 더 잘 인식할수록, 자연을 보호하려고 더 노력하게 된다.", context: "<u>(배열)</u> of environmental issues, the more we try to protect nature.", words: ["the", "more", "aware", "we", "are"], correct: "the more aware we are", full: "<strong>The more aware we are</strong> of environmental issues, the more we try to protect nature." },
+    { id: 2, type: 'arr', translation: "당신이 더 건강할수록, 일상 활동을 위한 에너지를 더 많이 갖게 될 것이다.", context: "<u>(배열)</u>, the more energy you will have for daily activities.", words: ["the", "more", "healthy", "you", "are"], correct: "the more healthy you are", full: "<strong>The more healthy you are</strong>, the more energy you will have for daily activities." },
+    { id: 3, type: 'arr', translation: "학생들이 더 자신감이 있을수록, 더 자연스럽게 의사소통할 수 있다.", context: "<u>(배열)</u>, the more naturally they can communicate.", words: ["the", "more", "confident", "students", "are"], correct: "the more confident students are", full: "<strong>The more confident students are</strong>, the more naturally they can communicate." },
+    { id: 4, type: 'arr', translation: "사람들이 더 고립될수록, 실제 친구를 사귀는 것은 더 어려워진다.", context: "<u>(배열)</u>, the harder it is for them to make real-life friends.", words: ["the", "more", "isolated", "people", "are"], correct: "the more isolated people are", full: "<strong>The more isolated people are</strong>, the harder it is for them to make real-life friends." },
+    { id: 5, type: 'arr', translation: "당신의 생각이 더 창의적일수록, 더 독특한 해결책을 찾을 수 있다.", context: "<u>(배열)</u>, the more unique solutions you can find.", words: ["the", "more", "creative", "your", "ideas", "are"], correct: "the more creative your ideas are", full: "<strong>The more creative your ideas are</strong>, the more unique solutions you can find." },
+    { id: 6, type: 'choice', translation: "연구원들은 수천 년 전 사람들이 어떻게 살았는지 보여주는 고대 유물을 발견했다.", sentence: "Artifacts that [reveal / reveals] how people lived thousands of years ago.", choices: ["reveal", "reveals"], correct: "reveal", full: "Artifacts that <strong>reveal</strong> how people lived..." },
+    { id: 7, type: 'choice', translation: "자선 행사에 참여하기를 원하는 사람은 누구든 이번 주 금요일까지 신청해야 한다.", sentence: "Anyone who [want / wants] to participate in the charity event...", choices: ["want", "wants"], correct: "wants", full: "Anyone who <strong>wants</strong> to participate..." },
+    { id: 8, type: 'choice', translation: "도서관에는 기말고사를 준비하고 있는 많은 학생들이 있다.", sentence: "Many students in the library who [is / are] preparing...", choices: ["is", "are"], correct: "are", full: "Many students... who <strong>are</strong> preparing..." },
+    { id: 9, type: 'choice', translation: "유기농 토양 채소는 면역 체계를 강화하는 데 도움을 주는 비타민을 함유한다.", sentence: "Vitamins that [help / helps] boost the immune system.", choices: ["help", "helps"], correct: "help", full: "Vitamins that <strong>help</strong> boost..." },
+    { id: 10, type: 'choice', translation: "그 앱은 모든 체력 수준에 맞는 운동들을 포함하는 운동 계획을 제공한다.", sentence: "A workout plan that [includes / include] exercises...", choices: ["includes", "include"], correct: "includes", full: "A plan... that <strong>includes</strong> exercises..." }
 ];
 
-let solvedStatus = new Array(allData.length).fill(false);
 const container = document.getElementById('quiz-container');
 
 allData.forEach((q, idx) => {
     const item = document.createElement('div');
     item.className = 'quiz-item';
-    item.id = `item-${idx}`;
-
-    let html = `<span class="translation">Q${idx+1}. ${q.translation}</span>`;
+    item.innerHTML = `<span class="translation">Q${idx+1}. ${q.translation}</span>`;
     
     if(q.type === 'arr') {
         const shuffled = [...q.words].sort(() => Math.random() - 0.5);
-        html += `
+        item.innerHTML += `
             <div class="sentence-context">${q.context}</div>
             <div class="answer-area" id="ans-${idx}"></div>
-            <div class="word-pool" id="pool-${idx}">
-                ${shuffled.map(w => `<span class="word" onclick="pickWord(this, ${idx})">${w}</span>`).join('')}
-            </div>
+            <div class="word-pool">${shuffled.map(w => `<span class="word" onclick="pickWord(this, ${idx})">${w}</span>`).join('')}</div>
         `;
     } else {
-        html += `
+        item.innerHTML += `
             <div class="sentence-context" style="background:#f1f3f5; padding:10px; border-radius:5px;">${q.sentence}</div>
             <div class="choice-container" id="choice-${idx}">
                 ${q.choices.map(c => `<button class="choice-btn" onclick="selectChoice(this, ${idx})">${c}</button>`).join('')}
             </div>
         `;
     }
-
-    html += `
-        <div id="feedback-${idx}" class="feedback-msg"></div>
-        <button id="btn-${idx}" class="check-btn" onclick="checkStep(${idx})">답 확인</button>
-    `;
-    item.innerHTML = html;
     container.appendChild(item);
 });
 
 function pickWord(el, idx) {
-    if(solvedStatus[idx]) return;
     const area = document.getElementById(`ans-${idx}`);
     const w = document.createElement('span');
     w.className = 'ans-word';
     w.innerText = el.innerText;
-    w.onclick = () => { if(!solvedStatus[idx]) { w.remove(); el.classList.remove('used'); } };
+    w.onclick = () => { w.remove(); el.classList.remove('used'); };
     area.appendChild(w);
     el.classList.add('used');
 }
 
 function selectChoice(btn, idx) {
-    if(solvedStatus[idx]) return;
     Array.from(btn.parentElement.children).forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
 }
 
-function checkStep(idx) {
-    const q = allData[idx];
-    const feedback = document.getElementById(`feedback-${idx}`);
-    let isCorrect = false;
+function processResult() {
+    let score = 0;
+    const report = document.getElementById('wrong-analysis');
+    report.innerHTML = "<h3>🔍 오답 노트 (틀리거나 풀지 않은 문제)</h3>";
 
-    if(q.type === 'arr') {
-        const user = Array.from(document.getElementById(`ans-${idx}`).children).map(c => c.innerText.trim()).join(' ').toLowerCase();
-        isCorrect = (user === q.correct.toLowerCase());
-    } else {
-        const sel = document.querySelector(`#choice-${idx} .selected`);
-        isCorrect = (sel && sel.innerText.trim() === q.correct);
-    }
+    allData.forEach((q, idx) => {
+        let userAns = "";
+        let isCorrect = false;
 
-    if(isCorrect) {
-        feedback.innerText = "✅ 정답입니다!";
-        feedback.className = "feedback-msg correct";
-        document.getElementById(`item-${idx}`).classList.add('solved');
-        document.getElementById(`btn-${idx}`).disabled = true;
-        solvedStatus[idx] = true;
-        updateStatus();
-    } else {
-        feedback.innerText = "❌ 다시 생각해보세요!";
-        feedback.className = "feedback-msg wrong";
-    }
-}
+        if(q.type === 'arr') {
+            userAns = Array.from(document.getElementById(`ans-${idx}`).children).map(c => c.innerText.trim()).join(' ').toLowerCase();
+            isCorrect = (userAns === q.correct.toLowerCase());
+        } else {
+            const sel = document.querySelector(`#choice-${idx} .selected`);
+            userAns = sel ? sel.innerText.trim() : "";
+            isCorrect = (userAns === q.correct);
+        }
 
-function updateStatus() {
-    const count = solvedStatus.filter(s => s).length;
-    document.getElementById('status-display').innerText = `진행 상황: ${count} / 10 문제 완료`;
-    
-    const finalBtn = document.getElementById('final-report-btn');
-    if(count === 10) {
-        finalBtn.innerText = "🎉 모든 학습 완료! 결과 리포트 보기";
-        finalBtn.classList.add('ready');
-        finalBtn.disabled = false;
-    } else {
-        finalBtn.innerText = `학습 미완료 (${10 - count}문제 남음)`;
-        finalBtn.classList.remove('ready');
-        finalBtn.disabled = true;
-    }
-}
+        if(isCorrect) {
+            score++;
+        } else {
+            const card = document.createElement('div');
+            card.className = 'review-card';
+            card.innerHTML = `
+                <strong>[Q${idx+1}] ${q.translation}</strong><br>
+                내가 쓴 답: <span class="wrong-input">${userAns || "(빈칸)"}</span><br>
+                <span class="correct-answer">정답 가이드: ${q.full}</span>
+            `;
+            report.appendChild(card);
+        }
+    });
 
-function showFinalReport() {
+    if(score === 10) report.innerHTML += "<p style='text-align:center;'>모든 문제를 맞혔습니다! 완벽해요! ✨</p>";
+
     document.getElementById('quiz-ui').style.display = 'none';
     document.getElementById('result-screen').style.display = 'block';
+    document.getElementById('final-score').innerText = `${score} / 10`;
     window.scrollTo(0,0);
 }
 </script>
